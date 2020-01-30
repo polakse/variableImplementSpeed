@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="47">
+    <author>scottyp</author>
+    <version>1.0.0.0</version>
+    <title>
+      <en>Variable Speed Limit</en>
+      <de>Variable Geschwindigkeitsbegrenzung</de>
+      <fr>Limite de vitesse variable</fr>
+      <es>Límite de velocidad variable</es>
+    </title>
+    <iconFilename>store.dds</iconFilename>
+    <multiplayer supported="true"/>
+    <description>
+      <en><![CDATA[Enables modification of an attached implement's speed limit.]]></en>
+      <fr><![CDATA[Permet la modification de la limite de vitesse d'un outil attaché.]]></fr>
+      <de><![CDATA[Ermöglicht die Änderung des Geschwindigkeitslimits eines angeschlossenen Geräts.]]></de>
+      <es><![CDATA[Permite la modificación del límite de velocidad de un implemento adjunto.]]></es>
+    </description>
+    
+    <extraSourceFiles>
+        <sourceFile filename="addNewSpecialization.lua"/>
+    </extraSourceFiles>
+
+    <actions>
+        <action name="INCREASE_SPEEDLIMIT" category="VEHICLE"   axisType="HALF" ignoreComboMask="false"/>
+        <action name="DECREASE_SPEEDLIMIT" category="VEHICLE"   axisType="HALF" ignoreComboMask="false"/>
+    </actions>
+
+    <inputBinding>
+        <actionBinding action="INCREASE_SPEEDLIMIT" >
+            <binding device="KB_MOUSE_DEFAULT" input="KEY_ralt KEY_period" />
+        </actionBinding>
+        <actionBinding action="DECREASE_SPEEDLIMIT" >
+            <binding device="KB_MOUSE_DEFAULT" input="KEY_ralt KEY_comma" />
+        </actionBinding>
+    </inputBinding>
+
+    <l10n>
+      <text name="input_INCREASE_SPEEDLIMIT">
+        <en>Increase tool speed limit</en>
+        <de>Werkzeuggeschwindigkeitsbegrenzung erhöhen</de>
+        <fr>Augmenter la limite de vitesse de l'outil</fr>
+        <es>Aumenta el límite de velocidad de la herramienta</es>
+      </text>
+      <text name="input_DECREASE_SPEEDLIMIT">
+        <en>Decrease tool speed limit</en>
+        <de>Werkzeuggeschwindigkeitsbegrenzung verringern</de>
+        <fr>Réduire la limite de vitesse de l'outil</fr>
+        <es>Disminuya el límite de velocidad de la herramienta</es>
+      </text>
+      <text name="current_Speedlimit">
+        <en>Speed limit of tool</en>
+        <de>Geschwindigkeitsbegrenzung des Werkzeugs</de>
+        <fr>Limite de vitesse de l'outil</fr>
+        <es>Límite de velocidad de herramienta</es>
+      </text>
+    </l10n>
+
+</modDesc>
