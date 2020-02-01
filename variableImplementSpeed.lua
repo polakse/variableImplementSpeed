@@ -50,7 +50,10 @@ function variableImplementSpeed:onLoad(savegame)
         self.variableImplementSpeed.minSpeedLimit = 2
         self.variableImplementSpeed.maxSpeedLimit = 40
         self.variableImplementSpeed.defaultSpeedLimit = 12
-        self.variableImplementSpeed.increment = 2
+        -- Note, if these increments are to be increased, to coarsen the granulatiry, some changes need to
+        -- happen in the code below to ensure the stored speed limit is a multiple of the increment
+        self.variableImplementSpeed.incrementKmh = 1
+        self.variableImplementSpeed.incrementMph = 1
 	
 	local key = string.format("vehicle.workAreas.workArea");
 	if hasXMLProperty(self.xmlFile, key) then
@@ -61,7 +64,7 @@ function variableImplementSpeed:onLoad(savegame)
 	if self.variableImplementSpeed.HasWorkarea == true then
 		key = string.format("vehicle.base.speedLimit");
 		local initialSpeedLimit = Utils.getNoNil(getXMLInt(self.xmlFile, key.."#value"), self.variableImplementSpeed.defaultSpeedLimit)
-                local adjustedSpeedLimit = math.min(math.max(math.floor(initialSpeedLimit/self.variableImplementSpeed.increment+0.5)*self.variableImplementSpeed.increment,self.variableImplementSpeed.minSpeedLimit),self.variableImplementSpeed.maxSpeedLimit)
+                local adjustedSpeedLimit = math.min(math.max(math.floor(initialSpeedLimit/self.variableImplementSpeed.incrementKmh+0.5)*self.variableImplementSpeed.incrementKmh,self.variableImplementSpeed.minSpeedLimit),self.variableImplementSpeed.maxSpeedLimit)
 		self.variableImplementSpeed.SpeedLimit  =  adjustedSpeedLimit
 	        --print("speed limit: " .. self.variableImplementSpeed.SpeedLimit)	
 		self.variableImplementSpeed.Hud                = {}
@@ -156,29 +159,33 @@ end
 function variableImplementSpeed:actionCallback(actionName, keyStatus, arg4, arg5, arg6)	
 	if self.variableImplementSpeed.HasWorkarea == true then 
 		if actionName == "INCREASE_SPEEDLIMIT" or actionName == "DECREASE_SPEEDLIMIT" then	
+                        local unit = variableImplementSpeed:getSpeedUnit()
+                        local step = self.variableImplementSpeed.incrementKmh
+			local currentSpeedLimit = self.variableImplementSpeed.SpeedLimit	
+                        if (unit == "MPH") then
+			  step  = self.variableImplementSpeed.incrementMph/0.62137
+                        end
 			if actionName == "INCREASE_SPEEDLIMIT" then
 				local limit = self.variableImplementSpeed.maxSpeedLimit
-				local step  = self.variableImplementSpeed.increment
-				
-				local currentSpeedLimit = self.variableImplementSpeed.SpeedLimit	
-				currentSpeedLimit = currentSpeedLimit + step
-                                --print("Trying to increase speed, current speed: ".. self.variableImplementSpeed.SpeedLimit .. ", new speed: "..currentSpeedLimit)
+				currentSpeedLimit = math.floor(currentSpeedLimit + step + 0.5)
 				if currentSpeedLimit <= limit then 
 					self.variableImplementSpeed.SpeedLimit = currentSpeedLimit
                                         self.speedLimit = currentSpeedLimit
+                                else
+					self.variableImplementSpeed.SpeedLimit = limit
+                                        self.speedLimit = limit
 				end				
 			end
-			
 			if actionName == "DECREASE_SPEEDLIMIT" then
 				local limit = self.variableImplementSpeed.minSpeedLimit
-				local step  = self.variableImplementSpeed.increment
-				
 				local currentSpeedLimit = self.variableImplementSpeed.SpeedLimit	
-				currentSpeedLimit = currentSpeedLimit - step
-                                --print("Trying to decrease speed, current speed: ".. self.variableImplementSpeed.SpeedLimit .. ", new speed: "..currentSpeedLimit)
+				currentSpeedLimit = math.floor(currentSpeedLimit - step + 0.5)
 				if currentSpeedLimit >= limit then 
 					self.variableImplementSpeed.SpeedLimit = currentSpeedLimit
                                         self.speedLimit = currentSpeedLimit
+                                else
+					self.variableImplementSpeed.SpeedLimit = limit
+                                        self.speedLimit = limit
 				end		
 			end
 			
