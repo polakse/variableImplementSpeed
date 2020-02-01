@@ -28,15 +28,29 @@ end
 function variableImplementSpeed:onPreLoad(savegame)
 end
 
-function variableImplementSpeed:onLoad(savegame)
-	self.variableImplementSpeed = {}
+function variableImplementSpeed:getSpeedUnit()
+	local distanceUnits =  g_gameSettings.useMiles and g_i18n:getText('unit_miles') or g_i18n:getText('unit_km');
+        if (string.lower(distanceUnits) == "kilometers") then
+          return "km/h"
+        else
+          return "MPH"
+        end
+end
 
+function variableImplementSpeed:onLoad(savegame)
+        -- Initialization
+	self.variableImplementSpeed = {}
 	self.variableImplementSpeed.WorkingWidth       = 1
-	self.variableImplementSpeed.SpeedLimit          = 0
+	self.variableImplementSpeed.SpeedLimit          = 0 -- Speed limit in km/h
         -- Workarea checks and calculations not currently relevant for this speed limit
         -- mod; however, we retain this functionality for possible future use
 	self.variableImplementSpeed.HasWorkarea        = false
 	self.variableImplementSpeedHasWorkarea         = false
+        -- Defaults, km/h
+        self.variableImplementSpeed.minSpeedLimit = 2
+        self.variableImplementSpeed.maxSpeedLimit = 40
+        self.variableImplementSpeed.defaultSpeedLimit = 12
+        self.variableImplementSpeed.increment = 2
 	
 	local key = string.format("vehicle.workAreas.workArea");
 	if hasXMLProperty(self.xmlFile, key) then
@@ -46,8 +60,8 @@ function variableImplementSpeed:onLoad(savegame)
 	
 	if self.variableImplementSpeed.HasWorkarea == true then
 		key = string.format("vehicle.base.speedLimit");
-		local defaultSpeedLimit = Utils.getNoNil(getXMLInt(self.xmlFile, key.."#value"), 12)
-                local adjustedSpeedLimit = math.min(math.max(math.floor(defaultSpeedLimit/4)*4,4),40)
+		local initialSpeedLimit = Utils.getNoNil(getXMLInt(self.xmlFile, key.."#value"), self.variableImplementSpeed.defaultSpeedLimit)
+                local adjustedSpeedLimit = math.min(math.max(math.floor(initialSpeedLimit/self.variableImplementSpeed.increment+0.5)*self.variableImplementSpeed.increment,self.variableImplementSpeed.minSpeedLimit),self.variableImplementSpeed.maxSpeedLimit)
 		self.variableImplementSpeed.SpeedLimit  =  adjustedSpeedLimit
 	        --print("speed limit: " .. self.variableImplementSpeed.SpeedLimit)	
 		self.variableImplementSpeed.Hud                = {}
@@ -62,7 +76,7 @@ function variableImplementSpeed:onLoad(savegame)
 			if speedLimit ~= nil then
 				self.variableImplementSpeed.SpeedLimit = speedLimit
 			else
-				self.variableImplementSpeed.SpeedLimit = 12	
+				self.variableImplementSpeed.SpeedLimit = self.variableImplementSpeed.defaultSpeedLimit	
 			end
 		end	
 	end	
@@ -84,28 +98,24 @@ function variableImplementSpeed:onUpdateTick(dt, isActiveForInput, isSelected)
 end
 
 function variableImplementSpeed:onUpdate(dt, isActiveForInput, isSelected)
-    --if self:getIsActive() then
-      self.speedLimit = self.variableImplementSpeed.SpeedLimit
-    --end
-  --print("onUpdate, setting self.speedLimit("..self.speedLimit ..") to: "..self.variableImplementSpeed.SpeedLimit)
-  --  if self:getIsActive() and self.variableImplementSpeed.HasWorkarea == true then
---		local currentSpeed       = self.lastSpeedReal*3600  -- *3600 = km/h -- math.max(3, self.lastSpeedReal*3600)
---		local currentSpeedLimit   = self.variableImplementSpeed.SpeedLimit
---		local shiftToMeterPerMin = 16.666
---		self.speedLimit = currentSpeedLimit
-                --print("onUpdate check ok, new speed limit is: "..self.speedLimit)
- --       else
-          --print("onUpdate, check not ok")
---	end
+  if self:getIsActive() and self.variableImplementSpeed.HasWorkarea == true then
+    --local currentSpeed       = self.lastSpeedReal*3600  -- *3600 = km/h -- math.max(3, self.lastSpeedReal*3600)
+    local currentSpeedLimit   = self.variableImplementSpeed.SpeedLimit
+    --local shiftToMeterPerMin = 16.666
+    self.speedLimit = currentSpeedLimit
+  end
 end
 
 function variableImplementSpeed:onDraw(isActiveForInput, isSelected)
 	if self.isClient and self.variableImplementSpeed.HasWorkarea == true then	
 		if isActiveForInput then	
 			if self.variableImplementSpeed.SpeedLimit ~= nil then		
-				local aktPrintText = self.variableImplementSpeed.SpeedLimit
-				local unit = "km/h"
-				g_currentMission:addExtraPrintText(g_i18n:getText("current_Speedlimit") .." : ".. aktPrintText .." ".. unit)							
+				local speedLimit = self.variableImplementSpeed.SpeedLimit
+				local unit = variableImplementSpeed:getSpeedUnit()
+                                if (unit == "MPH") then
+                                  speedLimit = math.floor(speedLimit*0.62137)
+                                end
+				g_currentMission:addExtraPrintText(g_i18n:getText("current_Speedlimit") .." : ".. speedLimit .." ".. unit)
 			end
 		end
 	end		
@@ -147,8 +157,8 @@ function variableImplementSpeed:actionCallback(actionName, keyStatus, arg4, arg5
 	if self.variableImplementSpeed.HasWorkarea == true then 
 		if actionName == "INCREASE_SPEEDLIMIT" or actionName == "DECREASE_SPEEDLIMIT" then	
 			if actionName == "INCREASE_SPEEDLIMIT" then
-				local limit = 40
-				local step  = 4
+				local limit = self.variableImplementSpeed.maxSpeedLimit
+				local step  = self.variableImplementSpeed.increment
 				
 				local currentSpeedLimit = self.variableImplementSpeed.SpeedLimit	
 				currentSpeedLimit = currentSpeedLimit + step
@@ -160,8 +170,8 @@ function variableImplementSpeed:actionCallback(actionName, keyStatus, arg4, arg5
 			end
 			
 			if actionName == "DECREASE_SPEEDLIMIT" then
-				local limit = 4
-				local step  = 4
+				local limit = self.variableImplementSpeed.minSpeedLimit
+				local step  = self.variableImplementSpeed.increment
 				
 				local currentSpeedLimit = self.variableImplementSpeed.SpeedLimit	
 				currentSpeedLimit = currentSpeedLimit - step
