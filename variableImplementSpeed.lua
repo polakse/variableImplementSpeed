@@ -106,6 +106,9 @@ function variableImplementSpeed:onUpdate(dt, isActiveForInput, isSelected)
     local currentSpeedLimit   = self.variableImplementSpeed.SpeedLimit
     --local shiftToMeterPerMin = 16.666
     self.speedLimit = currentSpeedLimit
+    if PowerConsumer.OriginalSpeedlimit ~= nil then
+      PowerConsumer.OriginalSpeedLimit = currentSpeedLimit
+    end
   end
 end
 
